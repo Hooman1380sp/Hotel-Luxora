@@ -1,13 +1,9 @@
-from pydantic import BaseModel, EmailStr
 from typing import Optional, Annotated
 from bson import ObjectId
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from pydantic.functional_validators import AfterValidator
 
-from utils.utils import validate_password_complexity, validate_iranian_mobile
-
-PasswordType = Annotated[str, AfterValidator(validate_password_complexity)]
-IranianPhoneNumberType = Annotated[str, AfterValidator(validate_iranian_mobile)]
+from utils.validators import PasswordType, IranianPhoneNumberType
 
 
 class UserRegister(BaseModel):

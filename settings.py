@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
-    #Mongo DB
+    # Mongo DB
     @cached_property
     def mongo_client(self) -> AsyncIOMotorClient:
         return AsyncIOMotorClient(self.MONGO_URI)
@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     @cached_property
     def mongo_db(self):
         return self.mongo_client.get_database(self.MONGO_DB_NAME)
+
 
 @lru_cache()
 def get_settings() -> Settings:

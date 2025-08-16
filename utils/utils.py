@@ -1,21 +1,31 @@
-import re
 from functools import lru_cache
 from random import randint
-from pydantic import ValidationError
 from redis.asyncio import ConnectionPool
 from redis.asyncio.client import Redis
 from redis.exceptions import RedisError
+from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 
 from settings import get_settings
 
 
-@lru_cache(maxsize=10)
-def connection_db(collection_name: str):
-    """connection to mongodb"""
+@lru_cache(maxsize=None)
+def get_db() -> AsyncIOMotorDatabase:
     settings = get_settings()
-    db = settings.mongo_db
-    collection = db[str(collection_name)]
-    return collection
+    return settings.mongo_db
+
+
+@lru_cache(maxsize=10)
+def collection_db(collection_name: str, db) -> AsyncIOMotorCollection:
+    """connection to mongodb. cached by @alru_cache library with maximum ten(10) size place in memory"""
+    try:
+        collection = db[str(collection_name)]
+        return collection
+    except Exception as e:
+        # logging.error(
+        #     f"Failed to get collection '{collection_name}': {str(e)}",
+        #     exc_info=True  # جزئیات کامل خطا (شامل traceback)
+        # )
+        raise e
 
 
 @lru_cache(maxsize=None)
@@ -54,41 +64,3 @@ class OtpHandler:
         """Validate otp code"""
         user_otp = user.get('otp')
         return int(otp) == int(user_otp)
-
-
-def validate_password_complexity(password: str) -> str:
-    """Validate Password"""
-    if len(password) < 8 or len(password) > 22:
-        raise ValidationError("Password must be between 8 and 22 characters")
-
-    if not re.search(r"[A-Z]", password):
-        raise ValidationError("Password must contain at least one uppercase letter")
-
-    if not re.search(r"[a-z]", password):
-        raise ValidationError("Password must contain at least one lowercase letter")
-
-    if not re.search(r"\d", password):
-        raise ValidationError("Password must contain at least one digit")
-
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        raise ValidationError("Password must contain at least one special character")
-    return password
-
-
-def validate_iranian_mobile(mobile: str) -> str:
-    """Validate Iranian mobile number format"""
-
-    cleaned = re.sub(r'[^\d]', '', mobile)
-    if len(cleaned) != 11:
-        raise ValidationError("Mobile number must be 11 digits")
-
-    if not cleaned.startswith('09'):
-        raise ValidationError("Mobile number must start with 09")
-
-    if not cleaned.isdigit():
-        raise ValidationError("Mobile number must contain only digits")
-
-    valid_prefixes = ['090', '091', '092', '093', '099']
-    if cleaned[:3] not in valid_prefixes:
-        raise ValidationError("Invalid mobile prefix")
-    return cleaned
