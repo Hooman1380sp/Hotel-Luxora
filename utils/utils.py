@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
 from settings import get_settings
 
 
-@lru_cache(maxsize=None)
+# MongoDB
 def get_db() -> AsyncIOMotorDatabase:
     settings = get_settings()
     return settings.mongo_db
@@ -28,6 +28,7 @@ def collection_db(collection_name: str, db) -> AsyncIOMotorCollection:
         raise e
 
 
+# Redis
 @lru_cache(maxsize=None)
 def get_redis():
     """
