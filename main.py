@@ -5,7 +5,9 @@ from settings import get_settings
 # from routers. import router as users
 
 app = FastAPI(
-
+    title="Hotel Luxora",
+    description="a Hotel reservation system platform with auto system and log",
+    version="1.0.0"
 )
 
 

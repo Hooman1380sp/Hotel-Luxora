@@ -9,6 +9,13 @@ class Settings(BaseSettings):
     MONGO_DB_NAME: str
     # redis
     REDIS_URL: str
+    # email
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: str
+    MAIL_SERVER: str
+    MAIL_FROM_NAME: str
 
     class Config:
         env_file = ".env"

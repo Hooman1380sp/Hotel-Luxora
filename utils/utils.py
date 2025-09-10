@@ -1,9 +1,10 @@
 from functools import lru_cache
-from random import randint
 from redis.asyncio import ConnectionPool
 from redis.asyncio.client import Redis
 from redis.exceptions import RedisError
 from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorDatabase
+from fastapi_mail import FastMail, ConnectionConfig, MessageSchema
+from fastapi.templating import Jinja2Templates
 
 from settings import get_settings
 
@@ -50,18 +51,40 @@ def get_redis():
         raise e
 
 
-class OtpHandler:
+async def SendOTPCode(to_email: str, otp: str):
     """
-    This handler is responsible for creating and verifying otp codes.
+    send otp code to user by email.
     """
 
-    @staticmethod
-    async def create() -> int:
-        """Hash password using bcrypt"""
-        return randint(11111, 99999)
+    settings = get_settings()
 
-    @staticmethod
-    async def validate(otp: int, user: dict) -> bool:
-        """Validate otp code"""
-        user_otp = user.get('otp')
-        return int(otp) == int(user_otp)
+    template_path = Jinja2Templates(directory="templates_email")
+    configs = ConnectionConfig(
+        MAIL_USERNAME=settings.MAIL_USERNAME,
+        MAIL_PASSWORD=settings.MAIL_PASSWORD,
+        MAIL_FROM=settings.MAIL_FROM,
+        MAIL_PORT=int(settings.MAIL_PORT),
+        MAIL_SERVER=settings.MAIL_SERVER,
+        MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
+        MAIL_STARTTLS=False,
+        MAIL_SSL_TLS=False,
+        USE_CREDENTIALS=True,
+        VALIDATE_CERTS=True,
+    )
+
+    mail = FastMail(configs)
+    template = template_path.get_template("otp.html")
+    html_content = template.render({"otp": otp})
+
+    message = MessageSchema(
+        subject="Your OTP Code from Hotel Luxora",
+        recipients=[to_email],
+        body=html_content,
+        subtype="html"
+    )
+
+    try:
+        await mail.send_message(message)
+        print("✅ Email sent successfully!")
+    except Exception as e:
+        print(f"❌ Failed to send email: {e}")
